@@ -42,5 +42,3 @@ All camera-related information and functions are managed using Context to make t
 - Run the project on Android: `yarn run android`
 
 Feel free to customize and extend the app according to your needs!
-
-For any questions or support, please contact [your contact information].
