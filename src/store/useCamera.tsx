@@ -40,58 +40,48 @@ const CameraContextProvider = ({ children }: { children: React.ReactNode }) => {
 
   // === Functions for handle camera settings ===
   const handleCameraSettings = ({ setting }: CameraSettingProp) => {
-    if (setting === 'hdr') {
-      return setCameraSettings({ ...cameraSettings, hdrActive: !cameraSettings.hdrActive });
-    }
-    if (setting === 'camera') {
-      return setCameraSettings({
-        ...cameraSettings,
-        cameraSelected: cameraSettings.cameraSelected === 'front' ? 'back' : 'front',
-      });
-    }
-    if (setting === 'quality') {
-      return setCameraSettings({
-        ...cameraSettings,
-        resolution: cameraSettings.resolution === 'max' ? { width: 1280, height: 720 } : 'max',
-      });
-    }
-    if (setting === 'flash') {
-      return setCameraSettings({
-        ...cameraSettings,
-        flash: cameraSettings.flash === 'on' ? 'off' : 'on',
-      });
-    }
-    if (setting === 'shutterSound') {
-      return setCameraSettings({
-        ...cameraSettings,
-        enableShutterSound: !cameraSettings.enableShutterSound,
-      });
-    }
-    if (setting === 'fps') {
-      return setCameraSettings({
-        ...cameraSettings,
-        fps: cameraSettings.fps === 30 ? 60 : 30,
-      });
-    }
-    if (setting === 'video') {
-      return setCameraSettings({
-        ...cameraSettings,
-        video: !cameraSettings.video,
-      });
+    const settingActions = {
+      hdr: () => setCameraSettings({ ...cameraSettings, hdrActive: !cameraSettings.hdrActive }),
+      camera: () => setCameraSettings({ ...cameraSettings, cameraSelected: cameraSettings.cameraSelected === 'front' ? 'back' : 'front' }),
+      quality: () => setCameraSettings({ ...cameraSettings, resolution: cameraSettings.resolution === 'max' ? { width: 1280, height: 720 } : 'max' }),
+      flash: () => setCameraSettings({ ...cameraSettings, flash: cameraSettings.flash === 'on' ? 'off' : 'on' }),
+      shutterSound: () => setCameraSettings({ ...cameraSettings, enableShutterSound: !cameraSettings.enableShutterSound }),
+      fps: () => setCameraSettings({ ...cameraSettings, fps: cameraSettings.fps === 30 ? 60 : 30 }),
+      video: () => setCameraSettings({ ...cameraSettings, video: !cameraSettings.video }),
+    };
+
+    const action = settingActions[setting];
+    if (action) {
+      action();
     }
   };
 
   // === Functions for handle photo, video and library ===
+
+  const handleSavefile = async (filePath: string | undefined, type: 'video' | 'photo') => {
+    try {
+      if (filePath !== undefined) {
+        await saveAsset(filePath, {
+          type: type
+        });
+        setSavedFile(!savedFile);
+      }
+    } catch (error: any) {
+      if (error.message) {
+        setError(error.message)
+      } else {
+        setError('Hubo un error, intente nuevamente')
+      }
+    }
+  }
+
   const handleTakePhoto = async () => {
     try {
       const file = await camera.current?.takePhoto({
         flash: cameraSettings.flash,
         enableShutterSound: cameraSettings.enableShutterSound,
       });
-      await saveAsset(`file://${file?.path}`, {
-        type: 'photo',
-      });
-      setSavedFile(!savedFile);
+      await handleSavefile(file?.path, 'photo');
     } catch (e) {
       if (e instanceof CameraCaptureError) {
         setError(e.message);
@@ -101,23 +91,29 @@ const CameraContextProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const startRecording = async () => {
+    camera.current?.startRecording({
+      fileType: 'mp4',
+      flash: cameraSettings.flash,
+      onRecordingError: (error) => {
+        setError(error.message);
+      },
+      onRecordingFinished: async (video) => {
+        await handleSavefile(video.path, 'video');
+      },
+    })
+  }
+
+  const stopRecording = async () => {
+    await camera.current?.stopRecording();
+  }
+
   const handleTakeVideo = async ({ action }: VideoAction) => {
-    action === 'start' &&
-      (await camera.current?.startRecording({
-        fileType: 'mp4',
-        flash: cameraSettings.flash,
-        onRecordingError: (error) => {
-          setError(error.message);
-        },
-        onRecordingFinished: async (video) => {
-          await saveAsset(`file://${video?.path}`, {
-            type: 'video',
-          })
-            .then(() => setSavedFile(!savedFile))
-            .catch(() => setError('Hubo un error, intente nuevamente'));
-        },
-      }));
-    action === 'stop' && (await camera.current?.stopRecording());
+    if (action === 'start') {
+      await startRecording();
+    } else {
+      await stopRecording();
+    }
   };
 
   const handleCameraError = useCallback((error: CameraRuntimeError) => {

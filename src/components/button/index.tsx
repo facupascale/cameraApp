@@ -11,7 +11,7 @@ const CustomButton = ({
 }: TouchableOpacityProps) => {
   return (
     <TouchableOpacity
-      id={id}
+      key={id}
       disabled={disabled}
       onPress={onPress}
       onLongPress={onLongPress}

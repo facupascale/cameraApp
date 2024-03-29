@@ -1,9 +1,9 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 40,
+    bottom: Platform.OS === 'android' ? 40 : 80,
     alignSelf: 'center',
     height: 150,
   },
