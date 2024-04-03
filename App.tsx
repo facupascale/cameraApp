@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, SafeAreaView, StatusBar } from 'react-native';
+import { OrientationLocker, PORTRAIT } from 'react-native-orientation-locker';
 import { usePermission } from './src/hooks';
 import { Camera } from './src/components';
 import { RequestPermission } from './src/components';
@@ -8,6 +9,7 @@ import { CameraContextProvider } from './src/store';
 function App(): React.JSX.Element {
   const { requestPermission, cameraPermission, microphonePermission, libraryPermission } =
     usePermission();
+  const [orientation, setOrientation] = useState<string>('portrait');
 
   useEffect(() => {
     requestPermission();
@@ -16,9 +18,13 @@ function App(): React.JSX.Element {
   return (
     <SafeAreaView style={{ flex: 1, marginTop: Platform.OS === 'ios' ? 70 : 0 }}>
       <StatusBar barStyle={'dark-content'} backgroundColor={'black'} />
+      <OrientationLocker
+        orientation={PORTRAIT}
+        onDeviceChange={(orientation) => setOrientation(orientation)}
+      />
       {!cameraPermission ||
-        !microphonePermission ||
-        (Platform.OS === 'android' && !libraryPermission) ? (
+      !microphonePermission ||
+      (Platform.OS === 'android' && !libraryPermission) ? (
         <RequestPermission
           requestPermission={requestPermission}
           cameraPermission={cameraPermission}
@@ -27,7 +33,7 @@ function App(): React.JSX.Element {
         />
       ) : (
         <CameraContextProvider>
-          <Camera />
+          <Camera orientation={orientation} />
         </CameraContextProvider>
       )}
     </SafeAreaView>
