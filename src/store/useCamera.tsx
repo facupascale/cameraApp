@@ -24,7 +24,9 @@ const CameraContextProvider = ({ children }: { children: React.ReactNode }) => {
     resolution: 'max',
     video: false,
   });
-  const device = useCameraDevice(cameraSettings.cameraSelected);
+  const device = useCameraDevice(cameraSettings.cameraSelected, {
+    physicalDevices: ['ultra-wide-angle-camera', 'wide-angle-camera', 'telephoto-camera'],
+  });
   const camera = useRef<Camera>(null);
   const format = useCameraFormat(device, [
     { fps: cameraSettings.fps },
@@ -42,10 +44,26 @@ const CameraContextProvider = ({ children }: { children: React.ReactNode }) => {
   const handleCameraSettings = ({ setting }: CameraSettingProp) => {
     const settingActions = {
       hdr: () => setCameraSettings({ ...cameraSettings, hdrActive: !cameraSettings.hdrActive }),
-      camera: () => setCameraSettings({ ...cameraSettings, cameraSelected: cameraSettings.cameraSelected === 'front' ? 'back' : 'front' }),
-      quality: () => setCameraSettings({ ...cameraSettings, resolution: cameraSettings.resolution === 'max' ? { width: 1280, height: 720 } : 'max' }),
-      flash: () => setCameraSettings({ ...cameraSettings, flash: cameraSettings.flash === 'on' ? 'off' : 'on' }),
-      shutterSound: () => setCameraSettings({ ...cameraSettings, enableShutterSound: !cameraSettings.enableShutterSound }),
+      camera: () =>
+        setCameraSettings({
+          ...cameraSettings,
+          cameraSelected: cameraSettings.cameraSelected === 'front' ? 'back' : 'front',
+        }),
+      quality: () =>
+        setCameraSettings({
+          ...cameraSettings,
+          resolution: cameraSettings.resolution === 'max' ? { width: 1280, height: 720 } : 'max',
+        }),
+      flash: () =>
+        setCameraSettings({
+          ...cameraSettings,
+          flash: cameraSettings.flash === 'on' ? 'off' : 'on',
+        }),
+      shutterSound: () =>
+        setCameraSettings({
+          ...cameraSettings,
+          enableShutterSound: !cameraSettings.enableShutterSound,
+        }),
       fps: () => setCameraSettings({ ...cameraSettings, fps: cameraSettings.fps === 30 ? 60 : 30 }),
       video: () => setCameraSettings({ ...cameraSettings, video: !cameraSettings.video }),
     };
@@ -62,18 +80,18 @@ const CameraContextProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       if (filePath !== undefined) {
         await saveAsset(filePath, {
-          type: type
+          type: type,
         });
         setSavedFile(!savedFile);
       }
     } catch (error: any) {
       if (error.message) {
-        setError(error.message)
+        setError(error.message);
       } else {
-        setError('Hubo un error, intente nuevamente')
+        setError('Hubo un error, intente nuevamente');
       }
     }
-  }
+  };
 
   const handleTakePhoto = async () => {
     try {
@@ -101,12 +119,12 @@ const CameraContextProvider = ({ children }: { children: React.ReactNode }) => {
       onRecordingFinished: async (video) => {
         await handleSavefile(video.path, 'video');
       },
-    })
-  }
+    });
+  };
 
   const stopRecording = async () => {
     await camera.current?.stopRecording();
-  }
+  };
 
   const handleTakeVideo = async ({ action }: VideoAction) => {
     if (action === 'start') {

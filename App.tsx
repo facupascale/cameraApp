@@ -4,7 +4,6 @@ import { usePermission } from './src/hooks';
 import { Camera } from './src/components';
 import { RequestPermission } from './src/components';
 import { CameraContextProvider } from './src/store';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 function App(): React.JSX.Element {
   const { requestPermission, cameraPermission, microphonePermission, libraryPermission } =
